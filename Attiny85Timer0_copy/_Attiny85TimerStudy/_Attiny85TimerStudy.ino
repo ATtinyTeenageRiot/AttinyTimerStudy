@@ -2,6 +2,8 @@
  * Author: <insert your name here>
  * Copyright: <insert your copyright message here>
  * License: <insert your license reference here>
+ *
+ * 8BitMixtape dual pwm stereo out
  */
 
 #include <avr/io.h>

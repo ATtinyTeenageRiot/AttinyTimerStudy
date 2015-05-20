@@ -27,6 +27,9 @@ int main(void)
     //count = 0;
     //count2 = 0;
 
+    //no prescale
+    clock_prescale_set(clock_div_1);
+
     // Enable PLL and async PCK for high-speed PWM
     PLLCSR |= (1 << PLLE) | (1 << PCKE);
 

@@ -37,6 +37,10 @@ volatile unsigned long u; // long
 volatile uint8_t snd; // 0...255
 volatile uint8_t snd2; // 0...255
 
+volatile uint8_t adc1 = _BV(ADLAR) | _BV(MUX0); //PB2-ADC1 pot2
+volatile uint8_t adc2 = _BV(ADLAR) | _BV(MUX1); //PB4-ADC2 pot1
+volatile uint8_t pot1; // 0...255
+volatile uint8_t pot2; // 0...255
 
 void setupOutputPin()
 {
@@ -110,6 +114,21 @@ void setupTimer0PWM()
      TCCR0B = 0<<WGM02 | 1<<CS00;
 }
 
+void adc_init()
+{
+    ADCSRA |= _BV(ADIE); //adc interrupt enable
+    ADCSRA |= _BV(ADEN); //adc enable
+    ADCSRA |= _BV(ADATE); //auto trigger
+    ADCSRA |= _BV(ADPS0) | _BV(ADPS1) | _BV(ADPS2); //prescale 128
+    ADMUX  = adc1;
+    ADCSRB = 0;
+}
+
+void adc_start()
+{
+    ADCSRA |= _BV(ADSC); //start adc conversion
+}
+
 int main(void)
 {
     clock_prescale_set(clock_div_1);
@@ -128,8 +147,11 @@ int main(void)
     //enable timer 0
     //enableTimer0PWM();
 
+    adc_init();
 
     sei(); //enable global interrupt
+
+    adc_start();
 
 //    /* endless loop */
 //    for(;;)
@@ -241,12 +263,35 @@ ISR(TIMER1_COMPA_vect)
 
     slower_interval++;
 
-    if(slower_interval >= 2)
+    cli();
+    uint8_t rate = pot1;
+    uint8_t pot2_val = pot2;
+
+    if(pot2_val< 10 ) pot2_val = 10;
+
+    //OCR1C = pot2_val;
+    sei();
+
+
+
+//    if(pot2_val >= 127)
+//    {
+//        crossfade_l = pot2_val - 126;
+//        crossfade_r = 256 - pot2_val;
+//    }else{
+//        crossfade_l = pot2_val;
+//        crossfade_r = 127 - pot2_val;
+//    }
+
+
+    if(slower_interval >= rate)
     {
         //play song
         snd = (t|(t>>(9+(10/2))|t>>7))*t&(t>>(11+(20/2))|t>>9);
 
-        snd2 = (t*(5+(12/5))&t>>7)|(t*3&t>>(10-(8/5)));
+        snd2 = (t*(5+(40/5))&t>>7)|(t*3&t>>(10-(8/5)));
+        //snd = t*(((t>>9)^((t>>9)-(1+(44/2)))^1)%(13+(12/2)));
+
 
         OCR0A = snd;
         OCR0B = (snd/2) + (snd2/2);
@@ -277,5 +322,29 @@ ISR(TIMER1_COMPA_vect)
 //        PORTB ^= (1 << PB4);
 //        timer0_duration_millis = 0;
 //    }
+
+}
+
+
+
+ISR(ADC_vect)
+{
+    //http://joehalpin.wordpress.com/2011/06/19/multi-channel-adc-with-an-attiny85/
+
+    static uint8_t firstTime = 1;
+    static uint8_t val;
+
+    val = ADCH;
+
+    if (firstTime == 1)
+        firstTime = 0;
+    else if (ADMUX  == adc1) {
+        pot1 = val;
+        ADMUX = adc2;
+    }
+    else if ( ADMUX == adc2) {
+        pot2  = val;
+        ADMUX = adc1;
+    }
 
 }

@@ -128,7 +128,7 @@ static inline void hw_adc_start()
 
 static inline void hw_init()
 {
-    //no prescale
+    //no prescale, enable 16 Mhz
     clock_prescale_set(clock_div_1);
 
     //timer 0 pwm - setup pwm / sound output

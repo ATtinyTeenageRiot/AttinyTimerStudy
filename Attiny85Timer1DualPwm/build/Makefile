@@ -22,12 +22,16 @@ DEVICE		= attiny85
 CLOCK		= 16500000
 
 #PROGRAMMER
-PROGRAMMER	= usbtiny
+PROGRAMMER	= stk500v1
+#SERIAL_DEVICE = /dev/cu.usbserial-A60062Vz
+SERIAL_DEVICE   =  /dev/cu.usbserial-A5029U9R
+BAUDRATE	= 19200
 
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
 
-FUSES		= -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0xe2:m
+#fuse 16Mhz internal pll
+FUSES		= -e -Uefuse:w:0xFF:m -Uhfuse:w:0xD4:m -Ulfuse:w:0xC1:m
 
 #AVR
 AVRDIR		= /Applications/Development/Arduino1.0.5_trinket.app/Contents/Resources/Java/hardware/tools/avr
@@ -36,9 +40,9 @@ AVRCONFIG	= $(AVRDIR)/etc/avrdude.conf
 OBJECTS		= main
 
 # Tune the lines below only if you know what you are doing:
-AVRDUDE_PROGRAMMER = -c$(PROGRAMMER)
+AVRDUDE_PROGRAMMER = -c$(PROGRAMMER) -P$(SERIAL_DEVICE) -b$(BAUDRATE)
 AVRDUDE = $(AVRBIN)/avrdude $(AVRDUDE_PROGRAMMER) -p $(DEVICE) -C $(AVRCONFIG)
-COMPILE = $(AVRBIN)/avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = $(AVRBIN)/avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) --std=c99 -I../../../
 
 # symbolic targets:
 all:	$(OBJECTS).hex
